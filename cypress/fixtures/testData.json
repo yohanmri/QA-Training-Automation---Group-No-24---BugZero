@@ -1,0 +1,19 @@
+{
+    "categories": {
+        "valid": {
+            "name": "Flowering Plants",
+            "description": "Plants that produce flowers"
+        },
+        "invalid": {
+            "name": "AB",
+            "description": "Too short name"
+        }
+    },
+    "plants": {
+        "valid": {
+            "name": "Rose Plant",
+            "price": 25.50,
+            "quantity": 10
+        }
+    }
+}
