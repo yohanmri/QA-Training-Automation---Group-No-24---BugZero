@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  cypress:
+    build: .
+    container_name: bugzero-cypress
+    network_mode: "host"
+    environment:
+      - CYPRESS_baseUrl=http://localhost:8080
+    volumes:
+      - .:/e2e
+      - /e2e/node_modules

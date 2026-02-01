@@ -13,8 +13,8 @@ Feature: User Authentication
 
   @ui @user @smoke
   Scenario: User successful login
-    When I enter username "user"
-    And I enter password "user123"
+    When I enter username "testuser"
+    And I enter password "test123"
     And I click the login button
     Then I should be redirected to the dashboard
     And I should not see admin action buttons
