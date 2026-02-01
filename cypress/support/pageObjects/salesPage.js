@@ -108,7 +108,6 @@ export const SalesPage = {
   },
 
   expectPage(pageNum) {
-    // Works even if the app uses redirects to embed query params
     cy.location("search").then((search) => {
       const qs = new URLSearchParams(search);
       expect(qs.get("page"), "page query param").to.equal(String(pageNum));

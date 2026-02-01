@@ -1,5 +1,4 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
-import { LoginPage } from "../../../support/pageObjects/loginPage";
 import { SalesPage } from "../../../support/pageObjects/salesPage";
 
 // -------- helpers --------
@@ -42,16 +41,6 @@ const columnTypeByName = (name) => {
   return "string";
 };
 
-// -------- steps --------
-
-Given('user is logged in as {string}', (userKey) => {
-  cy.fixture("users").then((users) => {
-    const creds = users[userKey];
-    expect(creds, `Missing user fixture for key: ${userKey}`).to.exist;
-
-    LoginPage.login(creds.username, creds.password);
-  });
-});
 
 Given('user navigates to the {string} page', (pageName) => {
   if (pageName !== "Sales") throw new Error(`Unsupported page name: ${pageName}`);
@@ -65,7 +54,6 @@ Then("validate Sales List page header is displayed", () => {
 });
 
 Then("validate Sales table has at least 1 record", () => {
-  // supports empty state too (but your preconditions expect records)
   SalesPage.validateTableHasRowsOrEmptyState();
 });
 
