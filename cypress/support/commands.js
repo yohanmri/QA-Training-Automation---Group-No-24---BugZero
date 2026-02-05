@@ -1,6 +1,3 @@
-// ***********************************************
-// Custom Commands for QA Training App
-// ***********************************************
 
 // Login command
 Cypress.Commands.add('login', (username, password) => {
@@ -18,7 +15,7 @@ Cypress.Commands.add('loginAsAdmin', () => {
 
 // User login shortcut
 Cypress.Commands.add('loginAsUser', () => {
-    cy.login('user', 'user123');
+    cy.login('testuser','test123');
 });
 
 // API login command

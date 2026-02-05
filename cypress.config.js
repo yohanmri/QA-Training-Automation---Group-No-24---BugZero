@@ -6,8 +6,12 @@ const allureWriter = require("@shelex/cypress-allure-plugin/writer");
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: "http://localhost:8080",
-    specPattern: "cypress/e2e/features/**/*.feature",
+    baseUrl: "http://localhost:8082",
+ 
+    specPattern: [
+  "cypress/e2e/features/**/*.feature",
+  "api-tests/features/**/*.feature"
+],
     supportFile: "cypress/support/e2e.js",
     screenshotOnRunFailure: true,
     video: true,
