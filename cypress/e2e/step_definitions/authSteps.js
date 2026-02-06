@@ -1,4 +1,5 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
+import { LoginPage } from "../../support/pageObjects/loginPage";
 
 Given('I navigate to the login page', () => {
     cy.visit('/ui/login');
@@ -39,4 +40,16 @@ Then('I should see error message {string}', (message) => {
 
 Then('I should see validation message {string}', (message) => {
     cy.contains(message).should('be.visible');
+});
+
+/**
+ * Shared login step for ALL features
+ */
+Given('user is logged in as {string}', (userKey) => {
+  cy.fixture("users").then((users) => {
+    const creds = users[userKey];
+    expect(creds, `Missing user fixture for key: ${userKey}`).to.exist;
+
+    LoginPage.login(creds.username, creds.password);
+  });
 });
