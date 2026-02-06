@@ -233,3 +233,71 @@ Then(`the deleted sale should not be retrievable`, () => {
     });
   });
 });
+
+When(`I attempt to sell an existing plant without authentication with quantity {int}`, (quantity) => {
+  return getToken("ADMIN")
+    .then((token) => getPlants(token).then((plants) => ({ token, plants })))
+    .then(({ token, plants }) => {
+      const plant = findPlantWithMinStock(plants, 1);
+      if (!plant) throw new Error("[SETUP] No plant with stock >= 1 found.");
+
+      // Send request WITHOUT token
+      return apiRequest({
+        method: "POST",
+        path: `/api/sales/plant/${plant.id}`,
+        token: null,
+        qs: { quantity },
+        failOnStatusCode: false,
+      });
+    })
+    .then(setLastResponse);
+});
+
+When(`I attempt to delete an existing sale without authentication`, () => {
+  return getToken("ADMIN")
+    .then((token) => createSaleIfNone(token).then((saleId) => ({ token, saleId })))
+    .then(({ saleId }) =>
+      apiRequest({
+        method: "DELETE",
+        path: `/api/sales/${saleId}`,
+        token: null, // NO auth
+        failOnStatusCode: false,
+      })
+    )
+    .then(setLastResponse);
+});
+
+When(`I sell a plant with its full stock as {string}`, (role) => {
+  const upperRole = role.toUpperCase();
+
+  return getToken(upperRole)
+    .then((token) => getPlants(token).then((plants) => ({ token, plants })))
+    .then(({ token, plants }) => {
+      const plant = findPlantWithMinStock(plants, 1);
+      if (!plant) throw new Error("[SETUP] No plant with stock >= 1 found for full-stock sale.");
+
+      return cy
+        .wrap(plant.id, { log: false })
+        .as(alias.plantId)
+        .then(() => getPlantById(token, plant.id))
+        .then((beforePlant) => {
+          const qty = resolvePlantQuantity(beforePlant);
+          expect(qty, "Plant stock should be > 0").to.be.greaterThan(0);
+
+          return cy.wrap(qty, { log: false }).as(alias.qtyBefore).then(() => sellPlant(token, plant.id, qty));
+        })
+        .then(setLastResponse);
+    });
+});
+
+Then(`the plant quantity should be 0 after selling all stock`, () => {
+  return getToken("ADMIN").then((token) => {
+    return cy.get(`@${alias.plantId}`).then((plantId) => {
+      return getPlantById(token, plantId).then((afterPlant) => {
+        const qtyAfter = resolvePlantQuantity(afterPlant);
+        expect(qtyAfter).to.equal(0);
+      });
+    });
+  });
+});
+

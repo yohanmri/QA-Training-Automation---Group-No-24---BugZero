@@ -4,7 +4,8 @@ Feature: Sales List - User Role
     Given user is logged in as "user"
 
   Scenario: Verify that a User can view the Sales List page with a paginated list of sales records
-    Given user navigates to the "Sales" page
+    Given sales records exist more than 10 for pagination
+    And user navigates to the "Sales" page
     Then validate Sales List page header is displayed
     And validate Sales table has at least 1 record
     And validate pagination component is displayed
@@ -43,3 +44,26 @@ Feature: Sales List - User Role
   Scenario: Verify that a User cannot access the Sell Plant page via direct URL and is redirected to a 403 page
     When user navigates directly to "/ui/sales/new"
     Then validate user is redirected to "/ui/403"
+
+  Scenario: TC_SALES_UI_USER_09 - Verify that a User sees “No sales found” message when no sales records exist on Sales List page
+    Given sales records are cleared using Admin API
+    And user navigates to the "Sales" page
+    Then validate "No sales found" message is displayed
+    And validate Sales table has 0 rows
+    And validate pagination is hidden or disabled
+
+  Scenario: TC_SALES_UI_USER_11 - Verify that Sales List sorting by Total Price sorts values numerically (not lexicographically) for User role
+    Given user navigates to the "Sales" page
+    Then validate Sales table has at least 1 record
+    When user clicks sort by "Total Price"
+    Then validate Sales table is sorted by Total Price in "asc" order
+    When user clicks sort by "Total Price"
+    Then validate Sales table is sorted by Total Price in "desc" order
+
+  Scenario: TC_SALES_UI_USER_12 - Verify that Sales List sorting by Quantity sorts values numerically for User role
+    Given user navigates to the "Sales" page
+    Then validate Sales table has at least 1 record
+    When user clicks sort by "Quantity"
+    Then validate Sales table is sorted by Quantity in "asc" order
+    When user clicks sort by "Quantity"
+    Then validate Sales table is sorted by Quantity in "desc" order

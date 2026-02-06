@@ -108,6 +108,26 @@ function getAnySaleIdOrSeed(userToken) {
   });
 }
 
+function getNonExistentSaleId(token) {
+  return apiRequest({
+    method: "GET",
+    path: "/api/sales",
+    token,
+    failOnStatusCode: false,
+  }).then((res) => {
+    expect(res.status, "GET /api/sales status").to.equal(200);
+
+    const ids = (Array.isArray(res.body) ? res.body : [])
+      .map((s) => s?.id)
+      .filter((id) => typeof id === "number");
+
+    if (ids.length === 0) return 99999999;
+
+    const maxId = Math.max(...ids);
+    return maxId + 999999;
+  });
+}
+
 // Step Definitions
 
 When(`I request all sales`, () => {
@@ -209,5 +229,56 @@ Then(`the response should contain an authorization error message`, () => {
     }
 
     expect(res.body).to.not.have.property("soldAt");
+  });
+});
+
+
+When(`I request a sale by a non-existent id`, () => {
+  return getToken("USER")
+    .then((token) => getNonExistentSaleId(token).then((saleId) => ({ token, saleId })))
+    .then(({ token, saleId }) =>
+      apiRequest({
+        method: "GET",
+        path: `/api/sales/${saleId}`,
+        token,
+        failOnStatusCode: false,
+      })
+    )
+    .then(setLastResponse);
+});
+
+When(`I request a sale by id {string} as {string}`, (saleId, role) => {
+  const upperRole = role.toUpperCase();
+
+  return getToken(upperRole)
+    .then((token) =>
+      apiRequest({
+        method: "GET",
+        path: `/api/sales/${saleId}`,
+        token,
+        failOnStatusCode: false,
+      })
+    )
+    .then(setLastResponse);
+});
+
+Then(`each Sale in the response should have correct totalPrice`, () => {
+  return getLastResponse().then((res) => {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.be.an("array");
+    expect(res.body.length, "Expected at least 1 sale record for totalPrice validation").to.be.greaterThan(0);
+
+    res.body.forEach((sale) => {
+      assertSaleShape(sale);
+
+      const price = Number(sale.plant.price);
+      const qty = Number(sale.quantity);
+      const total = Number(sale.totalPrice);
+
+      const expected = price * qty;
+
+      // allow tiny floating precision tolerance
+      expect(total, `totalPrice for saleId=${sale.id}`).to.be.closeTo(expected, 0.0001);
+    });
   });
 });

@@ -32,3 +32,22 @@ Feature: Sales API - Admin role (Sell + Delete)
     When I delete an existing sale as "ADMIN"
     Then the response status code should be 204
     And the deleted sale should not be retrievable
+
+    # TC_SALES_API_ADMIN_09
+  Scenario: Selling a plant without a Bearer token is rejected (401 Unauthorized)
+    When I attempt to sell an existing plant without authentication with quantity 1
+    Then the response status code should be 401
+    And the error response should match the ErrorResponse schema
+
+  # TC_SALES_API_ADMIN_10
+  Scenario: Deleting a sale without a Bearer token is rejected (401 Unauthorized)
+    When I attempt to delete an existing sale without authentication
+    Then the response status code should be 401
+    And the error response should match the ErrorResponse schema
+
+  # TC_SALES_API_ADMIN_11
+  Scenario: Selling quantity equal to current stock sets plant quantity to 0
+    When I sell a plant with its full stock as "ADMIN"
+    Then the response status code should be 201
+    And the plant quantity should be 0 after selling all stock
+

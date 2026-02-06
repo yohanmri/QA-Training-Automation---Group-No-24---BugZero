@@ -145,3 +145,93 @@ Then("validate the sale record is removed from the list", () => {
   });
 });
 
+// -------- TC_SALES_UI_ADMIN_09 --------
+Then("validate Plant dropdown lists only plants with stock greater than 0", () => {
+  cy.get("#plantId option").then(($opts) => {
+    const options = [...$opts]
+      .map((o) => ({ value: o.value, text: o.textContent?.trim() || "" }))
+      .filter((o) => o.value); // skip placeholder
+
+    expect(options.length, "plant options").to.be.greaterThan(0);
+
+    options.forEach((o) => {
+      const m = o.text.match(/\(Stock:\s*(\d+)\)/i);
+      expect(m, `Stock label missing in: ${o.text}`).to.exist;
+      expect(Number(m[1]), `stock must be > 0 in: ${o.text}`).to.be.greaterThan(0);
+    });
+  });
+});
+
+Then("validate each Plant option shows stock value", () => {
+  cy.get("#plantId option").then(($opts) => {
+    const options = [...$opts].filter((o) => o.value);
+    options.forEach((o) => {
+      expect(o.textContent, "stock label").to.match(/\(Stock:\s*\d+\)/i);
+    });
+  });
+});
+
+// -------- TC_SALES_UI_ADMIN_12 helper --------
+Then("validate admin remains on Sell Plant page", () => {
+  cy.url().should("include", "/ui/sales/new");
+});
+
+// -------- TC_SALES_UI_ADMIN_11 --------
+When("admin attempts to delete the first sale and cancels", () => {
+  // capture row fingerprint first
+  cy.get("table tbody tr")
+    .first()
+    .within(() => {
+      cy.get("td").eq(0).invoke("text").as("plantName_cancel");
+      cy.get("td").eq(1).invoke("text").as("quantity_cancel");
+      cy.get("td").eq(3).invoke("text").as("soldAt_cancel");
+    });
+
+  cy.on("window:confirm", (text) => {
+    expect(text).to.eq("Are you sure you want to delete this sale?");
+    return false; // cancel deletion
+  });
+
+  cy.get("table tbody tr").first().find("form button").click();
+  cy.location("pathname").should("include", "/ui/sales");
+});
+
+Then("validate the sale record is still present in Sales table", () => {
+  cy.get("@plantName_cancel").then((plant) => {
+    cy.get("@quantity_cancel").then((qty) => {
+      cy.get("@soldAt_cancel").then((soldAt) => {
+        cy.get("table tbody").should("contain.text", plant.trim());
+        cy.get("table tbody").should("contain.text", qty.trim());
+        cy.get("table tbody").should("contain.text", soldAt.trim());
+      });
+    });
+  });
+});
+
+Then("validate sale deleted success alert is not displayed", () => {
+  cy.get("body").then(($body) => {
+    const found = $body.find(".alert.alert-success:contains('Sale deleted successfully')").length > 0;
+    expect(found, "success alert should not appear").to.equal(false);
+  });
+});
+
+// -------- TC_SALES_UI_ADMIN_12 --------
+Given("Sale API is stubbed to return server error", () => {
+  cy.intercept("POST", /\/api\/sales\/plant\/\d+/, {
+    statusCode: 500,
+    body: { status: 500, error: "Internal Server Error", message: "Sale failed", timestamp: new Date().toISOString() }
+  }).as("sellPlantError");
+});
+
+Then("validate sale error alert is displayed", () => {
+  // wait for API call then check UI feedback
+  cy.wait("@sellPlantError");
+  cy.get("body").should(($body) => {
+    const text = $body.text().toLowerCase();
+    expect(
+      text.includes("error") || text.includes("failed") || text.includes("internal server"),
+      "expected an error toast/alert/message"
+    ).to.equal(true);
+  });
+});
+

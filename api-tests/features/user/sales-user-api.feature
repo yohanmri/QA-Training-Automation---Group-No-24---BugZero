@@ -34,3 +34,19 @@ Feature: Sales API - User role access and validations
     When I attempt to delete any existing sale as "USER"
     Then the response status code should be 403
     And the response should contain an authorization error message
+
+    # TC_SALES_API_USER_09
+  Scenario: Retrieve a non-existent sale by id returns 404 Not Found (GET /api/sales/{id})
+    Given I am authenticated to the API as "USER"
+    When I request a sale by a non-existent id
+    Then the response status code should be 404
+    And the error response should match the ErrorResponse schema
+    And the error message should contain "Sale not found"
+
+  # TC_SALES_API_USER_12
+  Scenario: Each Sale has correct totalPrice (plant.price × quantity) (GET /api/sales)
+    Given I am authenticated to the API as "USER"
+    When I request all sales
+    Then the response status code should be 200
+    And each Sale in the response should have correct totalPrice
+

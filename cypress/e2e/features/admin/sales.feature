@@ -57,3 +57,23 @@ Feature: Sales - Admin Role
     Then validate sale deleted success alert is displayed
     And validate the sale record is removed from the list
 
+  Scenario: TC_SALES_UI_ADMIN_09 - Verify that Sell Plant page dropdown lists only available plants and shows current stock for Admin role
+    When admin navigates to Sell Plant page
+    Then validate Sell Plant form is displayed
+    And validate Plant dropdown lists only plants with stock greater than 0
+    And validate each Plant option shows stock value
+
+  Scenario: TC_SALES_UI_ADMIN_11 - Verify that cancelling the Delete confirmation prompt does not delete the selected sale (Admin)
+    Given admin navigates to the "Sales" page
+    Then validate Sales table has at least 1 record
+    When admin attempts to delete the first sale and cancels
+    Then validate the sale record is still present in Sales table
+    And validate sale deleted success alert is not displayed
+
+  Scenario: TC_SALES_UI_ADMIN_12 - Verify that Sell Plant form prevents submission when Quantity is less than 1 (Admin)
+    When admin navigates to Sell Plant page
+    Then validate Sell Plant form is displayed
+    When admin selects the first plant with stock at least 1
+    And admin enters quantity "0"
+    Then validate quantity input is invalid
+

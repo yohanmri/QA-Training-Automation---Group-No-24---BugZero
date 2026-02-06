@@ -17,3 +17,11 @@ Then(`the error response should match the ErrorResponse schema`, () => {
     assertErrorResponseSchema(res.body);
   });
 });
+
+Then(`the error message should contain {string}`, (text) => {
+  return getLastResponse().then((res) => {
+    expect(res.body, "Expected response body").to.be.an("object");
+    expect(res.body).to.have.property("message");
+    expect(String(res.body.message)).to.include(text);
+  });
+});

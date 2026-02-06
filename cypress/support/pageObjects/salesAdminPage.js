@@ -92,7 +92,11 @@ export const SalesAdminPage = {
   },
 
   getSalesRowCount() {
-    return cy.get(this.tableRows).its("length");
+    cy.get("h3.mb-4").should("contain.text", "Sales"); // ensure page loaded
+    return cy.get("body").then(($body) => {
+      const rows = $body.find("table tbody tr");
+      return rows.length;
+    });
   },
 
   getFirstDeleteAction() {
