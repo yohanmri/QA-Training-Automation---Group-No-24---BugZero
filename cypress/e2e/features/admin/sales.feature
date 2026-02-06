@@ -70,10 +70,17 @@ Feature: Sales - Admin Role
     Then validate the sale record is still present in Sales table
     And validate sale deleted success alert is not displayed
 
-  Scenario: TC_SALES_UI_ADMIN_12 - Verify that Sell Plant form prevents submission when Quantity is less than 1 (Admin)
+  Scenario Outline: TC_SALES_UI_ADMIN_12 - Quantity must be >= 1
     When admin navigates to Sell Plant page
     Then validate Sell Plant form is displayed
     When admin selects the first plant with stock at least 1
-    And admin enters quantity "0"
+    And admin enters quantity "<qty>"
     Then validate quantity input is invalid
+    And validate quantity min error is shown
+
+
+  Examples:
+    | qty |
+    | 0   |
+    | -1  |
 

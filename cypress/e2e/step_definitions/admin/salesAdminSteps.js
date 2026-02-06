@@ -66,6 +66,13 @@ Then("validate quantity input is invalid", () => {
   });
 });
 
+Then("validate quantity min error is shown", () => {
+  SalesAdminPage.quantityInput()
+    .invoke("prop", "validationMessage")
+    .should("contain", "greater than or equal to 1");
+});
+
+
 // -------------------- Sale assertions --------------------
 Then('validate newly created sale row exists for selected plant and quantity {string}', (qty) => {
   cy.get("@selectedPlant").then(({ plantName }) => {
