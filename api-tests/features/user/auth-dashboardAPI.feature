@@ -22,7 +22,7 @@ Feature: User Authentication and Dashboard API Tests
         When I send a POST request to "/api/auth/login" with body:
             """
             {
-                "username": "user",
+                "username": "testuser",
                 "password": "wrongpassword"
             }
             """
@@ -58,3 +58,61 @@ Feature: User Authentication and Dashboard API Tests
         When I send a GET request to "/api/dashboard"
         Then the response status code should be 401
         And the response body should contain "Unauthorized"
+
+    @TC_AUTH_API_USER_06
+    Scenario: TC_AUTH_API_USER_06 - Login with correct username but wrong password
+        When I send a POST request to "/api/auth/login" with body:
+            """
+            {
+                "username": "testuser",
+                "password": "wrongpass"
+            }
+            """
+        Then the response status code should be 401
+        And the response body should contain "Unauthorized"
+
+    @TC_AUTH_API_USER_07
+    Scenario: TC_AUTH_API_USER_07 - Verify user token works for read-only endpoints
+        Given I am authenticated as user
+        When I send a GET request to "/api/categories" with Bearer token
+        Then the response status code should be 200
+        When I send a GET request to "/api/plants" with Bearer token
+        Then the response status code should be 200
+        When I send a GET request to "/api/sales" with Bearer token
+        Then the response status code should be 200
+
+    @TC_AUTH_API_USER_08
+    Scenario: TC_AUTH_API_USER_08 - Verify user cannot access admin-only create operations
+        Given I am authenticated as user
+        When I send a POST request to "/api/categories" with Bearer token and body:
+            """
+            {
+                "name": "TestCat",
+                "parentCategoryId": null
+            }
+            """
+        Then the response status code should be 403
+        And the response body should contain "Forbidden"
+
+    @TC_AUTH_API_USER_09
+    Scenario: TC_AUTH_API_USER_09 - Verify case-sensitive password validation
+        When I send a POST request to "/api/auth/login" with body:
+            """
+            {
+                "username": "testuser",
+                "password": "TEST123"
+            }
+            """
+        Then the response status code should be 401
+        And the response body should contain "Unauthorized"
+
+    @TC_AUTH_API_USER_10
+    Scenario: TC_AUTH_API_USER_10 - Verify user login with special characters in password
+        When I send a POST request to "/api/auth/login" with body:
+            """
+            {
+                "username": "testuser",
+                "password": "test123!@#"
+            }
+            """
+        Then the response status code should be 401

@@ -36,8 +36,8 @@ Given('I am authenticated as admin', () => {
 
 Given('I am authenticated as user', () => {
     const body = {
-        username: 'testuser',           // ✅ CORRECT - Changed from 'testuser'
-        password: 'test123'         // ✅ CORRECT - Changed from 'test123'
+        username: 'testuser',
+        password: 'test123'
     };
 
     cy.request({
@@ -98,6 +98,32 @@ When('I send a POST request to {string} with Bearer token', (endpoint) => {
     });
 });
 
+// POST request with Bearer token and body (for creating resources) - THIS IS NEW
+When('I send a POST request to {string} with Bearer token and body:', (endpoint, requestBody) => {
+    cy.log(`🔐 Using token: ${authToken ? authToken.substring(0, 20) + '...' : 'NO TOKEN'}`);
+
+    if (!authToken) {
+        throw new Error('No auth token available! Make sure login succeeded first.');
+    }
+
+    const body = JSON.parse(requestBody);
+
+    cy.request({
+        method: 'POST',
+        url: `${baseUrl}${endpoint}`,
+        body: body,
+        failOnStatusCode: false,
+        headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+        }
+    }).then((response) => {
+        apiResponse = response;
+        cy.log(`Response Status: ${response.status}`);
+        cy.log(`Response Body: ${JSON.stringify(response.body)}`);
+    });
+});
+
 // GET request without authentication (for unauthorized tests)
 When('I send a GET request to {string}', (endpoint) => {
     cy.request({
@@ -145,6 +171,27 @@ When('I send a GET request to {string} with Bearer token', (endpoint) => {
                 cy.log('⚠️ Endpoint Not Found - This endpoint does not exist');
             }
         }
+    });
+});
+
+// GET request with malformed Bearer token (for security testing) - THIS IS NEW
+When('I send a GET request to {string} with malformed Bearer token', (endpoint) => {
+    const malformedToken = authToken ? authToken.substring(0, authToken.length - 10) + 'MALFORMED' : 'INVALID_TOKEN';
+
+    cy.log(`🔐 Using malformed token: ${malformedToken.substring(0, 20)}...`);
+
+    cy.request({
+        method: 'GET',
+        url: `${baseUrl}${endpoint}`,
+        failOnStatusCode: false,
+        headers: {
+            'Authorization': `Bearer ${malformedToken}`,
+            'Content-Type': 'application/json'
+        }
+    }).then((response) => {
+        apiResponse = response;
+        cy.log(`Response Status: ${response.status}`);
+        cy.log(`Response Body: ${JSON.stringify(response.body)}`);
     });
 });
 

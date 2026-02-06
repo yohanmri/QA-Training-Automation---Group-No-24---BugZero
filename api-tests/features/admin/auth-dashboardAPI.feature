@@ -60,6 +60,61 @@ Feature: Admin Authentication and Dashboard API Tests
         Then the response status code should be 200
         When I send a GET request to "/api/dashboard" with Bearer token
         Then the response status code should be 401
-# NOTE: This test expects /api/auth/logout endpoint to exist
-# KNOWN BUG: BUG-API-002 - /api/auth/logout endpoint does not exist
-# Test will fail with 500 or 404 error
+    # NOTE: This test expects /api/auth/logout endpoint to exist
+    # KNOWN BUG: BUG-API-002 - /api/auth/logout endpoint does not exist
+    # Test will fail with 500 or 404 error
+
+    @TC_AUTH_API_ADMIN_06
+    Scenario: TC_AUTH_API_ADMIN_06 - Login with correct username but wrong password
+        When I send a POST request to "/api/auth/login" with body:
+            """
+            {
+                "username": "admin",
+                "password": "wrongpassword123"
+            }
+            """
+        Then the response status code should be 401
+        And the response body should contain "Unauthorized"
+
+    @TC_AUTH_API_ADMIN_07
+    Scenario: TC_AUTH_API_ADMIN_07 - Verify token works across multiple protected endpoints
+        Given I am authenticated as admin
+        When I send a GET request to "/api/categories" with Bearer token
+        Then the response status code should be 200
+        When I send a GET request to "/api/plants" with Bearer token
+        Then the response status code should be 200
+        When I send a GET request to "/api/sales" with Bearer token
+        Then the response status code should be 200
+
+    @TC_AUTH_API_ADMIN_08
+    Scenario: TC_AUTH_API_ADMIN_08 - Reject access with malformed token
+        Given I am authenticated as admin
+        When I send a GET request to "/api/categories" with malformed Bearer token
+        Then the response status code should be 401
+        And the response body should contain "Unauthorized"
+
+    @TC_AUTH_API_ADMIN_09
+    Scenario: TC_AUTH_API_ADMIN_09 - Verify case-sensitive username validation
+        When I send a POST request to "/api/auth/login" with body:
+            """
+            {
+                "username": "ADMIN",
+                "password": "admin123"
+            }
+            """
+        Then the response status code should be 401
+        And the response body should contain "Unauthorized"
+
+    @TC_AUTH_API_ADMIN_10
+    Scenario: TC_AUTH_API_ADMIN_10 - Verify admin can access admin-only endpoints after authentication
+        Given I am authenticated as admin
+        When I send a POST request to "/api/categories" with Bearer token and body:
+            """
+            {
+                "name": "TestCat",
+                "parentCategoryId": null
+            }
+            """
+        Then the response status code should be 201
+        And the response body should contain "name"
+        And the response body should contain "TestCat"
