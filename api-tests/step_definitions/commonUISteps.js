@@ -187,6 +187,14 @@ Then('the {string} link should not be highlighted', (linkText) => {
     cy.contains('a', linkText).should('not.have.class', 'active');
 });
 
+// ============================================
+// REDIRECTS AND URL CHECKS
+// ============================================
+
+Then('I should be redirected to {string}', (path) => {
+    cy.url({ timeout: 10000 }).should('include', path);
+});
+
 // Export for use in other step definition files
 module.exports = {
     getBaseUrl: () => baseUrl,
