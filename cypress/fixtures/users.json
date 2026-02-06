@@ -5,8 +5,8 @@
         "role": "ROLE_ADMIN"
     },
     "user": {
-        "username": "user",
-        "password": "user123",
+        "username": "testuser",
+        "password": "test123",
         "role": "ROLE_USER"
     },
     "invalid": {

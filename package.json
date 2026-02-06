@@ -13,15 +13,20 @@
   "cypress-cucumber-preprocessor": {
     "stepDefinitions": "cypress/e2e/step_definitions/**/*.js"
   },
-  "keywords": ["cypress", "cucumber", "testing", "automation"],
+  "keywords": [
+    "cypress",
+    "cucumber",
+    "testing",
+    "automation"
+  ],
   "author": "Team BugZero",
   "license": "ISC",
   "devDependencies": {
-    "@badeball/cypress-cucumber-preprocessor": "^20.0.0",
-    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.0",
+    "@badeball/cypress-cucumber-preprocessor": "^20.1.2",
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
     "@shelex/cypress-allure-plugin": "^2.40.0",
     "allure-commandline": "^2.25.0",
     "axios": "^1.6.0",
-    "cypress": "^13.6.0"
+    "cypress": "^13.17.0"
   }
 }
