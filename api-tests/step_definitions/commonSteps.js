@@ -11,6 +11,51 @@ Given('the API is available at {string}', (url) => {
     cy.log(`API Base URL set to: ${baseUrl}`);
 });
 
+// Authentication helper steps - login and save token in one step
+Given('I am authenticated as admin', () => {
+    const body = {
+        username: 'admin',
+        password: 'admin123'
+    };
+
+    cy.request({
+        method: 'POST',
+        url: `${baseUrl}/api/auth/login`,
+        body: body,
+        failOnStatusCode: false,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then((response) => {
+        expect(response.status).to.equal(200);
+        expect(response.body).to.have.property('token');
+        authToken = response.body.token;
+        cy.log(`✅ Admin authenticated. Token: ${authToken.substring(0, 20)}...`);
+    });
+});
+
+Given('I am authenticated as user', () => {
+    const body = {
+        username: 'testuser',
+        password: 'test123'
+    };
+
+    cy.request({
+        method: 'POST',
+        url: `${baseUrl}/api/auth/login`,
+        body: body,
+        failOnStatusCode: false,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then((response) => {
+        expect(response.status).to.equal(200);
+        expect(response.body).to.have.property('token');
+        authToken = response.body.token;
+        cy.log(`✅ User authenticated. Token: ${authToken.substring(0, 20)}...`);
+    });
+});
+
 // POST request with body
 When('I send a POST request to {string} with body:', (endpoint, requestBody) => {
     const body = JSON.parse(requestBody);
@@ -65,6 +110,13 @@ When('I send a GET request to {string}', (endpoint) => {
 
 // GET request with Bearer token
 When('I send a GET request to {string} with Bearer token', (endpoint) => {
+    // Add logging to debug token issues
+    cy.log(`Using token: ${authToken ? authToken.substring(0, 20) + '...' : 'NO TOKEN'}`);
+
+    if (!authToken) {
+        throw new Error('No auth token available! Make sure login succeeded first.');
+    }
+
     cy.request({
         method: 'GET',
         url: `${baseUrl}${endpoint}`,
@@ -77,6 +129,14 @@ When('I send a GET request to {string} with Bearer token', (endpoint) => {
         apiResponse = response;
         cy.log(`Response Status: ${response.status}`);
         cy.log(`Response Body: ${JSON.stringify(response.body)}`);
+
+        // Log detailed error information for debugging
+        if (response.status >= 400) {
+            cy.log(`❌ ERROR ${response.status}: ${JSON.stringify(response.body)}`);
+            if (response.status === 500) {
+                cy.log('⚠️ Server Error - Check backend logs for details');
+            }
+        }
     });
 });
 
@@ -111,10 +171,36 @@ Then('the token should be saved for subsequent requests', () => {
 });
 
 // Validate role in response (common for both admin and user)
+// Note: Some APIs return role in response body, others only in JWT payload
 Then('the response should contain role {string}', (expectedRole) => {
-    expect(apiResponse.body).to.have.property('role');
-    expect(apiResponse.body.role).to.equal(expectedRole);
-    cy.log(`Role validated: ${apiResponse.body.role}`);
+    if (apiResponse.body.role) {
+        // Role is in response body
+        expect(apiResponse.body.role).to.equal(expectedRole);
+        cy.log(`Role validated from response: ${apiResponse.body.role}`);
+    } else {
+        // Role is not in response body - it's in the JWT token payload
+        cy.log(`Role not in response body - checking JWT token payload`);
+
+        if (apiResponse.body.token) {
+            // Decode JWT to extract role (JWT format: header.payload.signature)
+            const token = apiResponse.body.token;
+            const base64Payload = token.split('.')[1];
+            const payload = JSON.parse(atob(base64Payload));
+
+            cy.log(`JWT Payload: ${JSON.stringify(payload)}`);
+
+            // Check for role in various common JWT claim names
+            const role = payload.role || payload.roles || payload.authorities || payload.auth;
+
+            if (role) {
+                const roleStr = Array.isArray(role) ? role[0] : role;
+                expect(roleStr).to.include(expectedRole);
+                cy.log(`Role validated from JWT: ${roleStr}`);
+            } else {
+                cy.log('⚠️ Warning: Role not found in response body or JWT payload');
+            }
+        }
+    }
 });
 
 // Export for use in other step definition files

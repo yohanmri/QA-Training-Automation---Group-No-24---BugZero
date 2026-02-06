@@ -23,6 +23,13 @@ Then('the dashboard response should contain admin statistics', () => {
     expect(response.body.totalSales).to.be.a('number');
     expect(response.body.totalRevenue).to.be.a('number');
 
-    cy.log('Admin dashboard statistics validated successfully');
-    cy.log(`Dashboard Data: ${JSON.stringify(response.body)}`);
+    // Log actual values for verification
+    cy.log('✅ Admin Dashboard Statistics:');
+    cy.log(`  Total Categories: ${response.body.totalCategories}`);
+    cy.log(`  Main Categories: ${response.body.mainCategories}`);
+    cy.log(`  Sub Categories: ${response.body.subCategories}`);
+    cy.log(`  Total Plants: ${response.body.totalPlants}`);
+    cy.log(`  Low Stock Plants: ${response.body.lowStockPlants}`);
+    cy.log(`  Total Sales: ${response.body.totalSales}`);
+    cy.log(`  Total Revenue: $${response.body.totalRevenue}`);
 });
