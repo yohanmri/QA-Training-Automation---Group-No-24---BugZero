@@ -1,5 +1,5 @@
 const { When, Then } = require('@badeball/cypress-cucumber-preprocessor');
-const { getAuthToken } = require('../commonSteps');
+const { getAuthToken, setApiResponse } = require('../commonSteps');
 
 // Shared state for sales tests
 let apiResponse;
@@ -11,6 +11,7 @@ let baseUrl = 'http://localhost:8080';
 // Helper to save response
 function saveResponse(response) {
     apiResponse = response;
+    setApiResponse(response);  // Update the shared state in commonSteps
     cy.log(`Response Status: ${response.status}`);
     if (response.body) {
         cy.log(`Response Body: ${JSON.stringify(response.body)}`);
@@ -18,6 +19,10 @@ function saveResponse(response) {
 }
 
 // Helper functions
+function resolvePlantQuantity(plant) {
+    return plant?.quantity ?? plant?.stock ?? plant?.availableQuantity;
+}
+
 function getPlants(token) {
     return cy.request({
         method: 'GET',
@@ -48,10 +53,6 @@ function getPlantById(token, plantId) {
         expect(res.status, `GET /api/plants/${plantId} status`).to.equal(200);
         return res.body;
     });
-}
-
-function resolvePlantQuantity(plant) {
-    return plant?.quantity ?? plant?.stock ?? plant?.availableQuantity;
 }
 
 function findPlantWithMinStock(plants, minStock) {
@@ -134,59 +135,131 @@ function createSaleIfNone(token) {
 
 /* TC_SALES_API_ADMIN_01 */
 When('I sell an existing plant with quantity {int}', (quantity) => {
-    const token = getAuthToken();
+    cy.then(() => {
+        const token = getAuthToken();
 
-    getPlants(token).then((plants) => {
-        const plant = findPlantWithMinStock(plants, 1);
-        if (!plant) throw new Error('[SETUP] No plant with stock >= 1 found for selling.');
+        return getPlants(token).then((plants) => {
+            const plant = findPlantWithMinStock(plants, 1);
+            if (!plant) throw new Error('[SETUP] No plant with stock >= 1 found for selling.');
 
-        sellPlant(token, plant.id, quantity).then(saveResponse);
+            return sellPlant(token, plant.id, quantity).then(saveResponse);
+        });
     });
 });
 
 /* TC_SALES_API_ADMIN_02 */
 When('I sell a plant with stock at least {int} with quantity {int}', (minStock, quantity) => {
-    const token = getAuthToken();
+    cy.then(() => {
+        const token = getAuthToken();
 
-    getPlants(token).then((plants) => {
-        const plant = findPlantWithMinStock(plants, minStock);
-        if (!plant) throw new Error(`[SETUP] No plant with stock >= ${minStock} found. Seed data and re-run.`);
+        return getPlants(token).then((plants) => {
+            const plant = findPlantWithMinStock(plants, minStock);
+            if (!plant) throw new Error(`[SETUP] No plant with stock >= ${minStock} found. Seed data and re-run.`);
 
-        plantId = plant.id;
+            plantId = plant.id;
 
-        getPlantById(token, plant.id).then((beforePlant) => {
-            qtyBefore = resolvePlantQuantity(beforePlant);
+            return getPlantById(token, plant.id).then((beforePlant) => {
+                qtyBefore = resolvePlantQuantity(beforePlant);
 
-            sellPlant(token, plant.id, quantity).then(saveResponse);
+                return sellPlant(token, plant.id, quantity).then(saveResponse);
+            });
         });
     });
 });
 
 /* TC_SALES_API_ADMIN_04 */
 When('I sell a non-existent plant with quantity {int}', (quantity) => {
-    const token = getAuthToken();
+    cy.then(() => {
+        const token = getAuthToken();
 
-    getNonExistentPlantId(token).then((badId) => {
-        sellPlant(token, badId, quantity).then(saveResponse);
+        return getNonExistentPlantId(token).then((badId) => {
+            return sellPlant(token, badId, quantity).then(saveResponse);
+        });
     });
 });
 
 /* TC_SALES_API_ADMIN_05 */
 When('I delete an existing sale', () => {
-    const token = getAuthToken();
+    cy.then(() => {
+        const token = getAuthToken();
 
-    createSaleIfNone(token).then((saleId) => {
-        deletedSaleId = saleId;
+        return createSaleIfNone(token).then((saleId) => {
+            deletedSaleId = saleId;
 
-        cy.request({
-            method: 'DELETE',
-            url: `${baseUrl}/api/sales/${saleId}`,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            failOnStatusCode: false
-        }).then(saveResponse);
+            return cy.request({
+                method: 'DELETE',
+                url: `${baseUrl}/api/sales/${saleId}`,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                failOnStatusCode: false
+            }).then(saveResponse);
+        });
+    });
+});
+
+/* TC_SALES_API_ADMIN_09 */
+When('I attempt to sell an existing plant without authentication with quantity {int}', (quantity) => {
+    cy.then(() => {
+        const token = getAuthToken();
+
+        return getPlants(token).then((plants) => {
+            const plant = findPlantWithMinStock(plants, 1);
+            if (!plant) throw new Error('[SETUP] No plant with stock >= 1 found.');
+
+            // Send request WITHOUT token
+            return cy.request({
+                method: 'POST',
+                url: `${baseUrl}/api/sales/plant/${plant.id}?quantity=${quantity}`,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                failOnStatusCode: false
+            }).then(saveResponse);
+        });
+    });
+});
+
+/* TC_SALES_API_ADMIN_10 */
+When('I attempt to delete an existing sale without authentication', () => {
+    cy.then(() => {
+        const token = getAuthToken();
+
+        return createSaleIfNone(token).then((saleId) => {
+            // Send request WITHOUT token
+            return cy.request({
+                method: 'DELETE',
+                url: `${baseUrl}/api/sales/${saleId}`,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                failOnStatusCode: false
+            }).then(saveResponse);
+        });
+    });
+});
+
+/* TC_SALES_API_ADMIN_11 */
+When('I sell a plant with its full stock', () => {
+    cy.then(() => {
+        const token = getAuthToken();
+
+        return getPlants(token).then((plants) => {
+            const plant = findPlantWithMinStock(plants, 1);
+            if (!plant) throw new Error('[SETUP] No plant with stock >= 1 found for full-stock sale.');
+
+            plantId = plant.id;
+
+            return getPlantById(token, plant.id).then((beforePlant) => {
+                const qty = resolvePlantQuantity(beforePlant);
+                expect(qty, 'Plant stock should be > 0').to.be.greaterThan(0);
+
+                qtyBefore = qty;
+
+                return sellPlant(token, plant.id, qty).then(saveResponse);
+            });
+        });
     });
 });
 
@@ -195,27 +268,44 @@ Then('the response should be a Sale object with quantity {int}', (expectedQty) =
     expect(apiResponse.headers['content-type']).to.include('application/json');
     expect(apiResponse.body).to.have.property('id');
     expect(apiResponse.body).to.have.property('quantity');
+    expect(apiResponse.body).to.have.property('soldAt');
     expect(apiResponse.body.quantity).to.equal(expectedQty);
 
     cy.log(`✅ Sale created with quantity: ${apiResponse.body.quantity}`);
 });
 
 Then('the plant stock should be reduced by 1', () => {
-    const token = getAuthToken();
+    cy.then(() => {
+        const token = getAuthToken();
 
-    getPlantById(token, plantId).then((afterPlant) => {
-        const qtyAfter = resolvePlantQuantity(afterPlant);
-        expect(qtyAfter).to.equal(qtyBefore - 1);
-        cy.log(`✅ Plant stock reduced from ${qtyBefore} to ${qtyAfter}`);
+        return getPlantById(token, plantId).then((afterPlant) => {
+            const qtyAfter = resolvePlantQuantity(afterPlant);
+            expect(qtyAfter).to.equal(qtyBefore - 1);
+            cy.log(`✅ Plant stock reduced from ${qtyBefore} to ${qtyAfter}`);
+        });
     });
 });
 
 Then('the deleted sale should not be retrievable', () => {
-    const token = getAuthToken();
+    cy.then(() => {
+        const token = getAuthToken();
 
-    getSaleById(token, deletedSaleId).then((res) => {
-        expect(res.status).to.equal(404);
-        cy.log(`✅ Deleted sale ${deletedSaleId} is no longer retrievable`);
+        return getSaleById(token, deletedSaleId).then((res) => {
+            expect(res.status).to.equal(404);
+            cy.log(`✅ Deleted sale ${deletedSaleId} is no longer retrievable`);
+        });
+    });
+});
+
+Then('the plant quantity should be 0 after selling all stock', () => {
+    cy.then(() => {
+        const token = getAuthToken();
+
+        return getPlantById(token, plantId).then((afterPlant) => {
+            const qtyAfter = resolvePlantQuantity(afterPlant);
+            expect(qtyAfter).to.equal(0);
+            cy.log(`✅ Plant stock is now 0 after selling all ${qtyBefore} units`);
+        });
     });
 });
 

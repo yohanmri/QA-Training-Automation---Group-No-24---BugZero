@@ -262,9 +262,24 @@ Then('the response should contain role {string}', (expectedRole) => {
     }
 });
 
+// Validate error response schema (for 400, 404, 401 errors)
+Then('the error response should match the ErrorResponse schema', () => {
+    expect(apiResponse.body).to.be.an('object');
+
+    // Check for common error response properties
+    const hasMessage = apiResponse.body.message || apiResponse.body.error;
+    const hasStatus = apiResponse.body.status || apiResponse.body.statusCode;
+
+    expect(hasMessage, 'Error response should have message or error field').to.exist;
+    expect(hasStatus, 'Error response should have status or statusCode field').to.exist;
+
+    cy.log(`✅ Error response validated: ${JSON.stringify(apiResponse.body)}`);
+});
+
 // Export for use in other step definition files
 module.exports = {
     getApiResponse: () => apiResponse,
     getAuthToken: () => authToken,
-    setAuthToken: (token) => { authToken = token; }
+    setAuthToken: (token) => { authToken = token; },
+    setApiResponse: (response) => { apiResponse = response; }
 };
