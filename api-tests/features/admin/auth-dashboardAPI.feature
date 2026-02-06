@@ -39,6 +39,9 @@ Feature: Admin Authentication and Dashboard API Tests
         Then the response status code should be 200
         And the response body should contain "id"
         And the response body should contain "name"
+    # NOTE: This test expects /api/dashboard endpoint to exist
+    # KNOWN BUG: BUG-API-001 - /api/dashboard endpoint does not exist
+    # Test will fail with 500 or 404 error
 
     @TC_AUTH_API_ADMIN_04
     Scenario: TC_AUTH_API_ADMIN_04 - Access Dashboard statistics with Admin token
@@ -46,6 +49,9 @@ Feature: Admin Authentication and Dashboard API Tests
         When I send a GET request to "/api/dashboard" with Bearer token
         Then the response status code should be 200
         And the dashboard response should contain admin statistics
+    # NOTE: This test expects /api/dashboard endpoint to exist
+    # KNOWN BUG: BUG-API-001 - /api/dashboard endpoint does not exist
+    # Test will fail with 500 or 404 error
 
     @TC_AUTH_API_ADMIN_05
     Scenario: TC_AUTH_API_ADMIN_05 - Logout Admin successfully
@@ -54,3 +60,6 @@ Feature: Admin Authentication and Dashboard API Tests
         Then the response status code should be 200
         When I send a GET request to "/api/dashboard" with Bearer token
         Then the response status code should be 401
+# NOTE: This test expects /api/auth/logout endpoint to exist
+# KNOWN BUG: BUG-API-002 - /api/auth/logout endpoint does not exist
+# Test will fail with 500 or 404 error
