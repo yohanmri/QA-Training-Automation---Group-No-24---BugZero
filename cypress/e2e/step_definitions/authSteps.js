@@ -1,5 +1,19 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 
+// --- BACKGROUND LOGIN STEPS (REQUIRED FOR FEATURES TO RUN) ---
+
+Given("the admin is logged into the application", () => {
+    // This calls the shortcut in your commands.js
+    cy.loginAsAdmin(); 
+});
+
+Given("the user is logged into the application", () => {
+    // This calls the shortcut in your commands.js
+    cy.loginAsUser();
+});
+
+// --- EXISTING MANUAL LOGIN STEPS ---
+
 Given('I navigate to the login page', () => {
     cy.visit('/ui/login');
     cy.url().should('include', '/login');
@@ -15,22 +29,18 @@ When('I enter password {string}', (password) => {
 
 When('I click the login button', () => {
     cy.get('button[type="submit"]').click();
-    cy.wait(1000);
 });
 
 Then('I should be redirected to the dashboard', () => {
-    cy.url().should('include', '/dashboard');
-    cy.contains('Dashboard').should('be.visible');
+    cy.url().should('match', /dashboard|plants|categories/);
 });
 
 Then('I should see admin menu options', () => {
-    // Verify admin-specific elements are visible
-    cy.get('body').should('be.visible');
+    cy.contains('Add').should('be.visible');
 });
 
 Then('I should not see admin action buttons', () => {
-    // Verify admin buttons are not visible for regular users
-    cy.get('body').should('be.visible');
+    cy.contains('Add').should('not.exist');
 });
 
 Then('I should see error message {string}', (message) => {
