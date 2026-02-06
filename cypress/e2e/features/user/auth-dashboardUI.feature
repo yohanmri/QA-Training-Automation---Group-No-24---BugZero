@@ -5,27 +5,27 @@ Feature: Authentication and Dashboard UI - User
 
     @ui @user @smoke
     Scenario: TC_AUTH_UI_USER_01 - Successful login with valid User credentials
-        When I enter username "user"
-        And I enter password "user123"
+        When I enter username "testuser"
+        And I enter password "test123"
         And I click the login button
         Then I should be redirected to the dashboard
         And the Dashboard page should be displayed
 
     @ui @user @validation
     Scenario: TC_AUTH_UI_USER_02 - Display validation message for empty Username
-        When I enter password "user123"
+        When I enter password "test123"
         And I click the login button
         Then I should see validation message "Username is required"
 
     @ui @user @validation
     Scenario: TC_AUTH_UI_USER_03 - Display validation message for empty Password
-        When I enter username "user"
+        When I enter username "testuser"
         And I click the login button
         Then I should see validation message "Password is required"
 
     @ui @user @negative
     Scenario: TC_AUTH_UI_USER_04 - Display error message for invalid credentials
-        When I enter username "user"
+        When I enter username "testuser"
         And I enter password "wrongpassword"
         And I click the login button
         Then I should see error message "Invalid username or password"

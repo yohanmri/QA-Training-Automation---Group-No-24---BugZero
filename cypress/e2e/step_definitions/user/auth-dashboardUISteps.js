@@ -7,7 +7,7 @@ Then('I should see the Inventory summary card', () => {
 });
 
 Then('I should see the navigation menu with all links', () => {
-    cy.get('nav').should('be.visible');
+    cy.get('.sidebar').should('be.visible');
     cy.contains('Dashboard').should('be.visible');
     cy.contains('Categories').should('be.visible');
     cy.contains('Plants').should('be.visible');
