@@ -55,7 +55,7 @@ Feature: User Authentication and Dashboard API Tests
         And the token should be saved for subsequent requests
         When I send a GET request to "/api/dashboard" with Bearer token
         Then the response status code should be 200
-        And the dashboard response should contain user statistics structure
+        And the dashboard response should contain user statistics
 
     @TC_AUTH_API_USER_05
     Scenario: TC_AUTH_API_USER_05 - Reject unauthorized access without token

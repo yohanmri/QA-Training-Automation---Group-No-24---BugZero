@@ -31,8 +31,10 @@ Feature: Admin Authentication and Dashboard API Tests
         And the response body should contain "Unauthorized"
 
     @TC_AUTH_API_ADMIN_03
-    Scenario: TC_AUTH_API_ADMIN_03 - Verify JWT token validity with Categories endpoint
+    Scenario: TC_AUTH_API_ADMIN_03 - Verify JWT token validity
         Given I am authenticated as admin
+        When I send a GET request to "/api/dashboard" with Bearer token
+        Then the response status code should be 200
         When I send a GET request to "/api/categories" with Bearer token
         Then the response status code should be 200
         And the response body should contain "id"

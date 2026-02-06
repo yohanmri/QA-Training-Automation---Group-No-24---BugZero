@@ -19,11 +19,11 @@ Then('the response should contain validation errors', () => {
         response.status === 400;
 
     expect(hasValidationError).to.be.true;
-    cy.log('Validation errors confirmed in response');
+    cy.log('✅ Validation errors confirmed in response');
 });
 
-// Validate user dashboard statistics structure
-Then('the dashboard response should contain user statistics structure', () => {
+// Validate user dashboard statistics
+Then('the dashboard response should contain user statistics', () => {
     const response = getApiResponse();
 
     // Validate response body contains expected dashboard fields
@@ -44,6 +44,13 @@ Then('the dashboard response should contain user statistics structure', () => {
     expect(response.body.totalSales).to.be.a('number');
     expect(response.body.totalRevenue).to.be.a('number');
 
-    cy.log('User dashboard statistics structure validated successfully');
-    cy.log(`Dashboard Data: ${JSON.stringify(response.body)}`);
+    // Log actual values for verification
+    cy.log('✅ User Dashboard Statistics:');
+    cy.log(`  Total Categories: ${response.body.totalCategories}`);
+    cy.log(`  Main Categories: ${response.body.mainCategories}`);
+    cy.log(`  Sub Categories: ${response.body.subCategories}`);
+    cy.log(`  Total Plants: ${response.body.totalPlants}`);
+    cy.log(`  Low Stock Plants: ${response.body.lowStockPlants}`);
+    cy.log(`  Total Sales: ${response.body.totalSales}`);
+    cy.log(`  Total Revenue: $${response.body.totalRevenue}`);
 });
