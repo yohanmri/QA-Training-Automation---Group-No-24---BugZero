@@ -6,10 +6,10 @@ const allureWriter = require("@shelex/cypress-allure-plugin/writer");
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: "http://localhost:8082",
-   specPattern: [
+    baseUrl: "http://localhost:8080",
+    specPattern: [
       "cypress/e2e/features/**/*.feature",
-      "api-tests/features/**/*.feature" 
+      "api-tests/features/**/*.feature"
     ],
     supportFile: "cypress/support/e2e.js",
     screenshotOnRunFailure: true,
@@ -17,16 +17,16 @@ module.exports = defineConfig({
     viewportWidth: 1920,
     viewportHeight: 1080,
     defaultCommandTimeout: 10000,
-    
+
     async setupNodeEvents(on, config) {
       const bundler = createBundler({
         plugins: [createEsbuildPlugin(config)],
       });
-      
+
       on("file:preprocessor", bundler);
       await addCucumberPreprocessorPlugin(on, config);
       allureWriter(on, config);
-      
+
       return config;
     },
   },
