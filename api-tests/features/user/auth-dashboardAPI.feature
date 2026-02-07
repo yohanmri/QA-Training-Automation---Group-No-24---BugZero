@@ -116,3 +116,14 @@ Feature: User Authentication and Dashboard API Tests
             }
             """
         Then the response status code should be 401
+
+    Scenario: TC_AUTH_API_USER_11 - Verify case-sensitive username validation
+        When I send a POST request to "/api/auth/login" with body:
+            """
+            {
+                "username": "TESTUSER",
+                "password": "test123"
+            }
+            """
+        Then the response status code should be 401
+        And the response body should contain "Unauthorized"
